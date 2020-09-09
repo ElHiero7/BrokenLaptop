@@ -8,17 +8,16 @@ from flask_sqlalchemy import SQLAlchemy
 
 # this is the database connection string or link 
 # brokenlaptops.db is the name of database and it will be created inside 
-# project directory. You can choose any other direcoty to keep it, 
+# project directory. You can choose any other directory to keep it, 2
 # in that case the string will look different. 
 database = "sqlite:///brokenlaptops.db"
-
 
 app = Flask(__name__)
 
 # important configuration parameter, don't miss it 
 app.config["SQLALCHEMY_DATABASE_URI"] = database
 
-# database instance. thid db will be used in this project 
+# database instance. this db will be used in this project 
 db = SQLAlchemy(app)
 
 ##################################################
@@ -43,36 +42,41 @@ def create():
         brokenlaptop = BrokenLaptop(brand=brand,price=price)
         db.session.add(brokenlaptop)
         db.session.commit()
-        
-    # now adde two lines to retrive all the BrokenLaptops from the database and display 
-    # as it is done in '/' index route 
+    
+    brokenlaptops = BrokenLaptop.query.all()
+    return render_template("create.html",brokenlaptops=brokenlaptops)    
     
     
-@app.route('/delete/<laptop_id>') # add id
+@app.route('/delete/<laptop_id>') 
 def delete(laptop_id):
-    brokenlaptop = BrokenLaptop.query.get(laptop_id)
-    db.session.delete(brokenlaptop)
-    # add a line of code to commit the delete operation 
+    try:
+        brokenlaptop = BrokenLaptop.query.get(laptop_id)
+        db.session.delete(brokenlaptop)
+        db.session.commit()
+         
+        
+        brokenlaptops = BrokenLaptop.query.all()
+        return render_template("delete.html",brokenlaptops=brokenlaptops)
+    except:
+        return render_template("trash.html")
+
     
-    
-    # now adde two lines to retrive all the BrokenLaptops from the database and display 
-    # as it is done in '/' index route 
-    
-@app.route('/update/<laptop_id>', methods=['GET','POST']) # add id 
+@app.route('/update/<laptop_id>', methods=['GET','POST']) 
 def update(laptop_id):
     if request.form:
+        newbrand = request.form.get("brand")
+        newprice = request.form.get("price")
         
-        # in this block, a modified instance of BrokenLaptop is coming in along with id
-        # add few lines of code so that the modification is saved in the database 
-        # for example, Brand of a laptop should be updated from 'Dell' to 'Dell Latitude'
-        # code snippet will be similar to create() method 
+        brokenlaptop = BrokenLaptop.query.get(laptop_id)
+        brokenlaptop.brand = newbrand
+        brokenlaptop.price = newprice
+
         db.session.commit()
-        
         return redirect("/")
 
+    brokenlaptop = BrokenLaptop.query.get(laptop_id)
+    return render_template("update.html",brokenlaptop=brokenlaptop)
 
-    # now adde two lines to retrive all the BrokenLaptops from the database and display 
-    # as it is done in '/' index route 
 
 # this class creates a table in the database named broken_laptop with 
 # entity fields id as integer, brand as text, and price as decimal number 
